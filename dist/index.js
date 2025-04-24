@@ -234,11 +234,6 @@ class ReadyPromise {
     }
 }
 
-const log$1 = (event, ...args) => {
-    if (process.env.NODE_ENV !== "production") {
-        console.log(`%c [rabby] (${new Date().toTimeString().substr(0, 8)}) ${event}`, "font-weight: bold; background-color: #7d6ef9; color: white;", ...args);
-    }
-};
 class DedupePromise {
     constructor(blackList) {
         this._tasks = {};
@@ -246,15 +241,12 @@ class DedupePromise {
     }
     async call(key, defer) {
         if (this._blackList.includes(key) && this._tasks[key]) {
-            log$1("[DedupePromise] transactionRejected: ", key);
             throw ethRpcErrors.ethErrors.rpc.transactionRejected('there is a pending request, please request after it resolved');
         }
         return new Promise((resolve) => {
             this._tasks[key] = (this._tasks[key] || 0) + 1;
-            log$1("[DedupePromise] call: ", key, this._tasks[key]);
             resolve(defer().finally(() => {
                 this._tasks[key]--;
-                log$1("[DedupePromise] finally: ", key, this._tasks[key]);
                 if (!this._tasks[key]) {
                     delete this._tasks[key];
                 }
@@ -515,9 +507,14 @@ const log = (event, ...args) => {
         console.log(`%c [rabby] (${new Date().toTimeString().substr(0, 8)}) ${event}`, "font-weight: bold; background-color: #7d6ef9; color: white;", ...args);
     }
 };
-// Add total counter
-const MONITORED_METHODS = ['eth_getBlockByNumber', 'eth_getBalance', 'eth_call'];
-let totalCalls = 0;
+// Add stats counter
+const stats = {
+    total: 0,
+    call: 0,
+    block: 0,
+    bal: 0,
+    toString: () => `t=${stats.total},c=${stats.call},b=${stats.block},bal=${stats.bal}`
+};
 let isOpera = /Opera|OPR\//i.test(navigator.userAgent);
 let uuid = genUUID();
 const doTabCheckIn = (request) => {
@@ -637,10 +634,23 @@ class EthereumProvider extends events.EventEmitter {
                 });
                 return promise;
             }
-            // Count monitored methods
-            if (MONITORED_METHODS.includes(data.method)) {
-                totalCalls++;
-                log("[Method Stats]", `Total calls of monitored methods: ${totalCalls}`);
+            // Update stats
+            switch (data.method) {
+                case 'eth_call':
+                    stats.call++;
+                    stats.total++;
+                    break;
+                case 'eth_getBlockByNumber':
+                    stats.block++;
+                    stats.total++;
+                    break;
+                case 'eth_getBalance':
+                    stats.bal++;
+                    stats.total++;
+                    break;
+            }
+            if (stats.total > 0) {
+                log("[Stats]", stats.toString());
             }
             log("[Leon Monitor Request]: ", data.method);
             if (this._isEip6963) {

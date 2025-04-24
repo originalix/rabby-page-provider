@@ -24,17 +24,12 @@ const MONITORED_METHODS = ['eth_getBlockByNumber', 'eth_getBalance', 'eth_call']
 let totalCalls = 0;
 
 // Add stats counter
-const methodStats = {
-  eth_getBlockByNumber: 0,
-  eth_getBalance: 0, 
-  eth_call: 0,
-  printStats: () => {
-    console.table({
-      eth_getBlockByNumber: methodStats.eth_getBlockByNumber,
-      eth_getBalance: methodStats.eth_getBalance,
-      eth_call: methodStats.eth_call
-    });
-  }
+const stats = {
+  total: 0,
+  call: 0,   // eth_call
+  block: 0,  // eth_getBlockByNumber
+  bal: 0,    // eth_getBalance
+  toString: () => `t=${stats.total},c=${stats.call},b=${stats.block},bal=${stats.bal}`
 };
 
 let isOpera = /Opera|OPR\//i.test(navigator.userAgent);
@@ -228,10 +223,23 @@ export class EthereumProvider extends EventEmitter {
       return promise;
     }
 
-    // Count monitored methods
-    if (MONITORED_METHODS.includes(data.method)) {
-      totalCalls++;
-      log("[Method Stats]", `Total calls of monitored methods: ${totalCalls}`);
+    // Update stats
+    switch(data.method) {
+      case 'eth_call':
+        stats.call++;
+        stats.total++;
+        break;
+      case 'eth_getBlockByNumber':
+        stats.block++;
+        stats.total++;
+        break;
+      case 'eth_getBalance':
+        stats.bal++;
+        stats.total++;
+        break;
+    }
+    if(stats.total > 0) {
+      log("[Stats]", stats.toString());
     }
 
     log("[Leon Monitor Request]: ", data.method);
