@@ -251,8 +251,10 @@ class DedupePromise {
         }
         return new Promise((resolve) => {
             this._tasks[key] = (this._tasks[key] || 0) + 1;
+            log$1("[DedupePromise] call: ", key, this._tasks[key]);
             resolve(defer().finally(() => {
                 this._tasks[key]--;
+                log$1("[DedupePromise] finally: ", key, this._tasks[key]);
                 if (!this._tasks[key]) {
                     delete this._tasks[key];
                 }
@@ -513,6 +515,9 @@ const log = (event, ...args) => {
         console.log(`%c [rabby] (${new Date().toTimeString().substr(0, 8)}) ${event}`, "font-weight: bold; background-color: #7d6ef9; color: white;", ...args);
     }
 };
+// Add total counter
+const MONITORED_METHODS = ['eth_getBlockByNumber', 'eth_getBalance', 'eth_call'];
+let totalCalls = 0;
 let isOpera = /Opera|OPR\//i.test(navigator.userAgent);
 let uuid = genUUID();
 const doTabCheckIn = (request) => {
@@ -631,6 +636,11 @@ class EthereumProvider extends events.EventEmitter {
                     });
                 });
                 return promise;
+            }
+            // Count monitored methods
+            if (MONITORED_METHODS.includes(data.method)) {
+                totalCalls++;
+                log("[Method Stats]", `Total calls of monitored methods: ${totalCalls}`);
             }
             log("[Leon Monitor Request]: ", data.method);
             if (this._isEip6963) {

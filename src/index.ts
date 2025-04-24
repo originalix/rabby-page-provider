@@ -19,6 +19,24 @@ const log = (event, ...args) => {
   }
 };
 
+// Add total counter
+const MONITORED_METHODS = ['eth_getBlockByNumber', 'eth_getBalance', 'eth_call'];
+let totalCalls = 0;
+
+// Add stats counter
+const methodStats = {
+  eth_getBlockByNumber: 0,
+  eth_getBalance: 0, 
+  eth_call: 0,
+  printStats: () => {
+    console.table({
+      eth_getBlockByNumber: methodStats.eth_getBlockByNumber,
+      eth_getBalance: methodStats.eth_getBalance,
+      eth_call: methodStats.eth_call
+    });
+  }
+};
+
 let isOpera = /Opera|OPR\//i.test(navigator.userAgent);
 let uuid = genUUID();
 
@@ -208,6 +226,12 @@ export class EthereumProvider extends EventEmitter {
         });
       });
       return promise;
+    }
+
+    // Count monitored methods
+    if (MONITORED_METHODS.includes(data.method)) {
+      totalCalls++;
+      log("[Method Stats]", `Total calls of monitored methods: ${totalCalls}`);
     }
 
     log("[Leon Monitor Request]: ", data.method);

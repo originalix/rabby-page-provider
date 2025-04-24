@@ -28,10 +28,12 @@ class DedupePromise {
 
     return new Promise((resolve) => {
       this._tasks[key] = (this._tasks[key] || 0) + 1;
+      log("[DedupePromise] call: ", key, this._tasks[key]);
 
       resolve(
         defer().finally(() => {
           this._tasks[key]--;
+          log("[DedupePromise] finally: ", key, this._tasks[key]);
           if (!this._tasks[key]) {
             delete this._tasks[key];
           }
