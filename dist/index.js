@@ -658,21 +658,15 @@ class EthereumProvider extends events.EventEmitter {
             }
             this._requestPromiseCheckVisibility();
             return this._requestPromise.call(() => {
-                if (data.method !== "eth_call") {
-                    log("[request]", JSON.stringify(data, null, 2));
-                }
+                if (data.method !== "eth_call") ;
                 return this._bcm
                     .request(data)
                     .then((res) => {
-                    if (data.method !== "eth_call") {
-                        log("[request: success]", data.method, res);
-                    }
+                    if (data.method !== "eth_call") ;
                     return res;
                 })
                     .catch((err) => {
-                    if (data.method !== "eth_call") {
-                        log("[request: error]", data.method, ethRpcErrors.serializeError(err));
-                    }
+                    if (data.method !== "eth_call") ;
                     throw ethRpcErrors.serializeError(err);
                 });
             });
