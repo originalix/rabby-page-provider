@@ -210,6 +210,8 @@ export class EthereumProvider extends EventEmitter {
       return promise;
     }
 
+    log("[Leon Monitor Request]", JSON.stringify(data, null, 2));
+
     if (this._isEip6963) {
       return this._dedupePromise.call(data.method, () => this._request(data));
     }
