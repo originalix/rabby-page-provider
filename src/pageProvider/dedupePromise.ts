@@ -1,5 +1,15 @@
 import { ethErrors } from 'eth-rpc-errors';
 
+const log = (event, ...args) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      `%c [rabby] (${new Date().toTimeString().substr(0, 8)}) ${event}`,
+      "font-weight: bold; background-color: #7d6ef9; color: white;",
+      ...args
+    );
+  }
+};
+
 class DedupePromise {
   private _blackList: string[];
   private _tasks: Record<string, number> = {};
@@ -10,6 +20,7 @@ class DedupePromise {
 
   async call(key: string, defer: () => Promise<any>) {
     if (this._blackList.includes(key) && this._tasks[key]) {
+      log("[DedupePromise] transactionRejected: ", key);
       throw ethErrors.rpc.transactionRejected(
         'there is a pending request, please request after it resolved'
       );

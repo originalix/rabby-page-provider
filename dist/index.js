@@ -234,6 +234,11 @@ class ReadyPromise {
     }
 }
 
+const log$1 = (event, ...args) => {
+    if (process.env.NODE_ENV !== "production") {
+        console.log(`%c [rabby] (${new Date().toTimeString().substr(0, 8)}) ${event}`, "font-weight: bold; background-color: #7d6ef9; color: white;", ...args);
+    }
+};
 class DedupePromise {
     constructor(blackList) {
         this._tasks = {};
@@ -241,6 +246,7 @@ class DedupePromise {
     }
     async call(key, defer) {
         if (this._blackList.includes(key) && this._tasks[key]) {
+            log$1("[DedupePromise] transactionRejected: ", key);
             throw ethRpcErrors.ethErrors.rpc.transactionRejected('there is a pending request, please request after it resolved');
         }
         return new Promise((resolve) => {
@@ -626,7 +632,7 @@ class EthereumProvider extends events.EventEmitter {
                 });
                 return promise;
             }
-            log("[Leon Monitor Request]", JSON.stringify(data, null, 2));
+            log("[Leon Monitor Request]: ", data.method);
             if (this._isEip6963) {
                 return this._dedupePromise.call(data.method, () => this._request(data));
             }
